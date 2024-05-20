@@ -579,7 +579,7 @@ def test_cached_template(monkeypatch, create_command, myapp, full_context, tmp_p
 
     # The origin of the repo was fetched
     mock_repo.remote.assert_called_once_with(name="origin")
-    mock_remote.fetch.assert_called_once_with()
+    mock_remote.fetch.assert_called_once_with(depth=1)
 
     # The remote head was checked out.
     mock_remote_head.checkout.assert_called_once_with()
@@ -626,7 +626,7 @@ def test_cached_template_offline(
 
     # An attempt to fetch the repo origin was made
     mock_repo.remote.assert_called_once_with(name="origin")
-    mock_remote.fetch.assert_called_once_with()
+    mock_remote.fetch.assert_called_once_with(depth=1)
 
     # A warning was raised to the user about the fetch problem
     output = capsys.readouterr().out

@@ -105,7 +105,7 @@ def test_explicit_cached_repo_template(base_command, mock_git):
         new_url="https://example.com/magic/special-template.git",
         old_url="https://example.com/magic/special-template.git",
     )
-    mock_remote.fetch.assert_called_once_with()
+    mock_remote.fetch.assert_called_once_with(depth=1)
 
     # The right branch was accessed
     mock_remote.refs.__getitem__.assert_called_once_with("special")
@@ -152,7 +152,7 @@ def test_explicit_cached_repo_template_with_diff_url(base_command, mock_git):
         new_url="https://example.com/magic/special-template.git",
         old_url="https://example.com/existing/special-template.git",
     )
-    mock_remote.fetch.assert_called_once_with()
+    mock_remote.fetch.assert_called_once_with(depth=1)
 
     # The right branch was accessed
     mock_remote.refs.__getitem__.assert_called_once_with("special")
@@ -200,7 +200,7 @@ def test_offline_repo_template(base_command, mock_git):
         new_url="https://example.com/magic/special-template.git",
         old_url="https://example.com/magic/special-template.git",
     )
-    mock_remote.fetch.assert_called_once_with()
+    mock_remote.fetch.assert_called_once_with(depth=1)
 
     # The right branch was accessed
     mock_remote.refs.__getitem__.assert_called_once_with("special")
@@ -247,7 +247,7 @@ def test_cached_missing_branch_template(base_command, mock_git):
         new_url="https://example.com/magic/special-template.git",
         old_url="https://example.com/magic/special-template.git",
     )
-    mock_remote.fetch.assert_called_once_with()
+    mock_remote.fetch.assert_called_once_with(depth=1)
 
     # An attempt to access the branch was made
     mock_remote.refs.__getitem__.assert_called_once_with("invalid")

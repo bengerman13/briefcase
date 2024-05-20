@@ -893,7 +893,7 @@ Did you run Briefcase in a project directory that contains {filename.name!r}?"""
                 remote.set_url(new_url=template, old_url=remote.url)
                 try:
                     # Attempt to update the repository
-                    remote.fetch()
+                    remote.fetch(depth=1)
                 except self.tools.git.exc.GitCommandError as e:
                     # We are offline, or otherwise unable to contact
                     # the origin git repo. It's OK to continue; but
