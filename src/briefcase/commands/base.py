@@ -958,7 +958,7 @@ Did you run Briefcase in a project directory that contains {filename.name!r}?"""
         # to clobber them anyway, so we'll fall through to other error-handling about
         # that later
         if not dest_path.exists() or not any(dest_path.iterdir()):
-            self.tools.git.Repo.clone_from(repo_url, dest_path, depth=1)
+            self.tools.git.Repo.clone_from(repo_url, os.fsdecode(dest_path), depth=1)
 
     def _generate_template(self, template, branch, output_path, extra_context):
         """Ensure the named template is up-to-date for the given branch, and roll out

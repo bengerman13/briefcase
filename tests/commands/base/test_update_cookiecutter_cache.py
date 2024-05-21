@@ -1,3 +1,4 @@
+import os
 from unittest import mock
 
 import pytest
@@ -25,10 +26,6 @@ def test_explicit_new_repo_template(base_command, mock_git):
     """If a previously unknown URL template is specified it is used."""
     base_command.tools.git = mock_git
 
-    # There won't be a cookiecutter cache, so there won't be
-    # a repo path (yet).
-    base_command.tools.git.Repo.side_effect = git_exceptions.NoSuchPathError
-
     cached_path = cookiecutter_cache_path(
         "https://example.com/magic/special-template.git"
     )
@@ -40,8 +37,14 @@ def test_explicit_new_repo_template(base_command, mock_git):
     )
 
     # The template that will be used is the original URL
-    assert cached_template == "https://example.com/magic/special-template.git"
+    assert cached_template == cached_path
 
+    # the repo will be cloned
+    base_command.tools.git.Repo.clone_from.assert_called_once_with(
+        "https://example.com/magic/special-template.git",
+        os.fsdecode(cached_path),
+        depth=1,
+    )
     # The cookiecutter cache location will be interrogated.
     base_command.tools.git.Repo.assert_called_once_with(cached_path)
 
@@ -105,7 +108,9 @@ def test_explicit_cached_repo_template(base_command, mock_git):
         new_url="https://example.com/magic/special-template.git",
         old_url="https://example.com/magic/special-template.git",
     )
-    mock_remote.fetch.assert_called_once_with(depth=1)
+    mock_remote.fetch.assert_called_once_with(
+        "+special:special", refmap="+refs/heads/*:refs/remotes/origin/*", depth=1
+    )
 
     # The right branch was accessed
     mock_remote.refs.__getitem__.assert_called_once_with("special")
@@ -152,7 +157,9 @@ def test_explicit_cached_repo_template_with_diff_url(base_command, mock_git):
         new_url="https://example.com/magic/special-template.git",
         old_url="https://example.com/existing/special-template.git",
     )
-    mock_remote.fetch.assert_called_once_with(depth=1)
+    mock_remote.fetch.assert_called_once_with(
+        "+special:special", refmap="+refs/heads/*:refs/remotes/origin/*", depth=1
+    )
 
     # The right branch was accessed
     mock_remote.refs.__getitem__.assert_called_once_with("special")
@@ -200,7 +207,9 @@ def test_offline_repo_template(base_command, mock_git):
         new_url="https://example.com/magic/special-template.git",
         old_url="https://example.com/magic/special-template.git",
     )
-    mock_remote.fetch.assert_called_once_with(depth=1)
+    mock_remote.fetch.assert_called_once_with(
+        "+special:special", refmap="+refs/heads/*:refs/remotes/origin/*", depth=1
+    )
 
     # The right branch was accessed
     mock_remote.refs.__getitem__.assert_called_once_with("special")
@@ -247,7 +256,9 @@ def test_cached_missing_branch_template(base_command, mock_git):
         new_url="https://example.com/magic/special-template.git",
         old_url="https://example.com/magic/special-template.git",
     )
-    mock_remote.fetch.assert_called_once_with(depth=1)
+    mock_remote.fetch.assert_called_once_with(
+        "+invalid:invalid", refmap="+refs/heads/*:refs/remotes/origin/*", depth=1
+    )
 
     # An attempt to access the branch was made
     mock_remote.refs.__getitem__.assert_called_once_with("invalid")
