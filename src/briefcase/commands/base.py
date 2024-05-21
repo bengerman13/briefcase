@@ -884,6 +884,7 @@ Did you run Briefcase in a project directory that contains {filename.name!r}?"""
             # fall back to using the specified template directly.
             cached_template = cookiecutter_cache_path(template)
             try:
+                self.ensure_repo_cloned(template, cached_template)
                 repo = self.tools.git.Repo(cached_template)
                 # Raises ValueError if "origin" isn't a valid remote
                 remote = repo.remote(name="origin")
@@ -893,7 +894,11 @@ Did you run Briefcase in a project directory that contains {filename.name!r}?"""
                 remote.set_url(new_url=template, old_url=remote.url)
                 try:
                     # Attempt to update the repository
-                    remote.fetch(depth=1)
+                    remote.fetch(
+                        f"+{branch}:{branch}",
+                        refmap="+refs/heads/*:refs/remotes/origin/*",
+                        depth=1,
+                    )
                 except self.tools.git.exc.GitCommandError as e:
                     # We are offline, or otherwise unable to contact
                     # the origin git repo. It's OK to continue; but
@@ -926,10 +931,6 @@ Did you run Briefcase in a project directory that contains {filename.name!r}?"""
                 except IndexError as e:
                     # No branch exists for the requested version.
                     raise TemplateUnsupportedVersion(branch) from e
-            except self.tools.git.exc.NoSuchPathError:
-                # Template cache path doesn't exist.
-                # Just use the template directly, rather than attempting an update.
-                cached_template = template
             except self.tools.git.exc.InvalidGitRepositoryError:
                 # Template cache path exists, but isn't a git repository
                 # Just use the template directly, rather than attempting an update.
@@ -943,6 +944,21 @@ Did you run Briefcase in a project directory that contains {filename.name!r}?"""
             cached_template = template
 
         return cached_template
+
+    def ensure_repo_cloned(self, repo_url, cached_template):
+        """Ensure the given template repository is cloned.
+
+        :param repo_url: clonable git repository URL
+        :param dest_path: path where the repository should be cloned
+        """
+        dest_path = Path(cached_template)
+
+        # assume that any files in the directory mean the repo is cloned
+        # if there are files here that are _not_ the repo, we probably don't want
+        # to clobber them anyway, so we'll fall through to other error-handling about
+        # that later
+        if not dest_path.exists() or not any(dest_path.iterdir()):
+            self.tools.git.Repo.clone_from(repo_url, dest_path, depth=1)
 
     def _generate_template(self, template, branch, output_path, extra_context):
         """Ensure the named template is up-to-date for the given branch, and roll out
